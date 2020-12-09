@@ -131,3 +131,6 @@ dmypy.json
 # User Json files
 email.json
 lastturns.json
+
+# folders
+__pycache__
