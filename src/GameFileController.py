@@ -7,9 +7,7 @@ import csv
 import json
 import os
 
-from src.MailController import get_save_game_path
-from src.main import LAST_TURN_FILE, DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, DOM_NEWLORDS_SUBDIR, TURN_EXT, H_EXT, \
-    DOM_EXE
+from src.main import DOM_DATA_DIRECTORY, DOM_EXE
 
 
 class PretenderFile():
@@ -17,7 +15,7 @@ class PretenderFile():
         self.fileName = ""
         self.rawData = ''
         self.nations = {}
-        self.read_nations_lookup('nations.csv')
+        self.read_nations_lookup('../data/nations.csv')
 
     def read_nations_lookup(self, fileName):
         # nation csv file has following line structure: nationID,nationName,nationTitle,era
@@ -147,3 +145,17 @@ def get_save_game_file_path(gameName):
 
 def start_dominions(gameName):
     os.system(DOM_EXE + " --nocredits " + gameName)
+
+
+def get_save_game_path(gameName):
+    gameDir = os.path.join(DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, gameName)
+    return gameDir
+
+
+DOM_SAVE_GAME_SUBDIR = "savedgames"
+DOM_NEWLORDS_SUBDIR = "newlords"
+TURN_EXT = ".trn"
+H_EXT = ".2h"
+LAST_TURN_FILE = "lastturns.json"
+BACKUP_TURNS = True
+CURRENT_TURN = "current"

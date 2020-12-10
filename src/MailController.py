@@ -7,10 +7,10 @@ from email.message import EmailMessage
 from tkinter import messagebox
 
 from src.GameFileController import load_last_turn_file, get_or_create_save_game_path, start_dominions, \
-    save_last_turn_file, get_save_game_file_name, get_save_game_file_path
-from src.View import EmailWindow, ask_for_upload
-from src.main import EMAIL_FILE, DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, SMTP_SERVER, TURN_EMAIL, \
-    FETCH_PROTOCOL, BACKUP_TURNS, filter_chars, JOIN_EMAIL
+    save_last_turn_file, get_save_game_file_name, get_save_game_file_path, BACKUP_TURNS
+
+
+#from src.View import EmailWindow, ask_for_upload
 
 
 def load_mail():
@@ -25,11 +25,6 @@ def load_mail():
             FROM_PWD = jsonData["passwd"]
     except IOError:
         ew = EmailWindow()
-
-
-def get_save_game_path(gameName):
-    gameDir = os.path.join(DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, gameName)
-    return gameDir
 
 
 def extract_from_subject(subjectText):
@@ -199,3 +194,18 @@ def upload_pretender(gameName, pretenderPath):
         messagebox.showinfo(title="Pretender sent", message="Pretender sent")
     except Exception as err:
         messagebox.showinfo(title="Error", message=str(err))
+
+
+def filter_chars(text):
+    return text.strip("\t\n\r ")
+
+
+EMAIL_FILE = "email.json"
+FROM_EMAIL = ""
+FROM_PWD = ""
+SMTP_SERVER = "imap.gmail.com"
+SMTP_PORT = 993
+FETCH_PROTOCOL = '(RFC822)'
+LLAMA_EMAIL = "@llamaserver.net"
+TURN_EMAIL = "turns" + LLAMA_EMAIL
+JOIN_EMAIL = "pretenders" + LLAMA_EMAIL
