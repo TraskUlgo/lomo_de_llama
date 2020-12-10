@@ -1,12 +1,15 @@
+import imaplib
+import json
 import os
 import shutil
 import tkinter
 from tkinter import Frame, Listbox, StringVar, OptionMenu, Button, END, Toplevel, Label, Entry, messagebox
 
-from src.main import CURRENT_TURN, load_mail, load_last_turn_file, read_mail, get_or_create_save_game_path, \
-    get_save_game_turn_file_name, get_save_game_file_name, start_dominions, ask_for_upload, upload_turn, \
-    list_pretender_files, DOM_DATA_DIRECTORY, DOM_SAVEGAME_SUBDIR, DOM_NEWLORDS_SUBDIR, upload_pretender
-from src.pretender import PretenderFile
+from src.GameFileController import PretenderFile, load_last_turn_file, list_pretender_files, \
+    get_or_create_save_game_path, get_save_game_turn_file_name, get_save_game_file_name, start_dominions
+from src.MailController import load_mail, read_mail, upload_turn, upload_pretender
+from src.main import CURRENT_TURN, DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, DOM_NEWLORDS_SUBDIR, SMTP_SERVER, \
+    EMAIL_FILE
 
 
 class ManagerFrame(Frame):
@@ -122,7 +125,7 @@ class PretenderFrame(Frame):
             self.pretenderFiles.append(PretenderFile())
             pretender = self.pretenderFiles[-1]
             if pretender.open(
-                    os.path.join(DOM_DATA_DIRECTORY, DOM_SAVEGAME_SUBDIR, DOM_NEWLORDS_SUBDIR, pretenderFileName)):
+                    os.path.join(DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, DOM_NEWLORDS_SUBDIR, pretenderFileName)):
                 pretenderDescription = "{}, {}, {}".format(pretender.get_era(), pretender.get_nation_name(),
                                                            pretender.get_name())
                 self.availablePretenders.insert(END, pretenderDescription)
@@ -161,3 +164,64 @@ class JoinWindow(Toplevel):
             self.destroy()
         else:
             messagebox.showwarning(title="Problem", message="Name or pretender selection invalid please reselect")
+
+
+class EmailWindow(Toplevel):
+    def __init__(self):
+        super().__init__()
+        self.title("Add gmail account")
+
+        self.msgLbl = Label(self,
+                            text="Please enter your gmail information. You have to allow access for low security apps in gmail. It is adviced to use a secondary account just for this purpose.")
+        self.msgLbl.pack()
+
+        self.emailLbl = Label(self, text="Email address")
+        self.emailLbl.pack()
+
+        self.emailVar = StringVar(self)
+        self.email = Entry(self, textvariable=self.emailVar)
+        self.email.pack()
+
+        self.emailPassLbl = Label(self, text="Email password")
+        self.emailPassLbl.pack()
+
+        self.emailPassVar = StringVar(self)
+        self.emailPass = Entry(self, textvariable=self.emailPassVar)
+        self.emailPass.pack()
+
+        self.registerMailButton = Button(self, command=self.register_mail, text="registerMail")
+        self.registerMailButton.pack()
+
+    def register_mail(self, *args, **kwargs):
+        global FROM_EMAIL
+        global FROM_PWD
+        email = self.emailVar.get()
+        passwd = self.emailPassVar.get()
+
+        if len(email) > 0 and len(passwd) > 0:
+            try:
+                mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+                mail.login(email, passwd)
+
+                mail.select('inbox')
+
+                # mail.quit()
+
+                FROM_EMAIL = email
+                FROM_PWD = passwd
+
+                jsonData = {"email": FROM_EMAIL, "passwd": FROM_PWD}
+                with open(EMAIL_FILE, 'w') as jsonFile:
+                    json.dump(jsonData, jsonFile)
+
+                self.destroy()
+
+            except Exception as err:
+                messagebox.showerror(title="Problem", message=str(err))
+        else:
+            messagebox.showerror(title="Problem", message="Please enter email and password")
+
+
+def ask_for_upload():
+    msgAnswer = messagebox.askyesno(title="Upload turnfile", message="Do you want to upload the turnfile now?")
+    return msgAnswer
