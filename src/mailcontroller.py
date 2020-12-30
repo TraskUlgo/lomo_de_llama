@@ -5,18 +5,56 @@ import os
 import smtplib
 from email.message import EmailMessage
 from tkinter import messagebox
-import view
+# import view
 import gamefilecontroller as gfc
+import view
+from pathlib import Path
+from sys import platform
 
-EMAIL_FILE = "email.json"
 FROM_EMAIL = ""
 FROM_PWD = ""
+
+EMAIL_FILE = "../data/email.json"
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT = 993
 FETCH_PROTOCOL = '(RFC822)'
 LLAMA_EMAIL = "@llamaserver.net"
 TURN_EMAIL = "turns" + LLAMA_EMAIL
 JOIN_EMAIL = "pretenders" + LLAMA_EMAIL
+
+
+class UserData:
+    def __init__(self):
+        self.dom_data_dir = ""
+        self.dom_exe = ""
+        self.get_platform()
+
+        self.email_name = ""
+        self.email_pw = ""
+        self.get_email()
+
+    def get_email(self):
+        try:
+            with open(EMAIL_FILE, 'r') as jsonFile:
+                json_data = json.load(jsonFile)
+                self.email_name = json_data["email"]
+                self.email_pw = json_data["passwd"]
+        except IOError:
+            view.EmailWindow()
+
+    def get_platform(self):
+        if platform == "linux":
+            # linux
+            self.dom_data_dir = str(Path.home()) + "/.dominions5/"
+            self.dom_exe = str(Path.home()) + "/.local/share/Steam/steamapps/common/Dominions5/dom5.sh"
+        elif platform == "darwin":
+            # OS X
+            self.dom_data_dir = str(Path.home()) + "/.dominions5/"
+            self.dom_exe = str(Path.home()) + "/.local/share/Steam/steamapps/common/Dominions5/dom5.sh"
+        elif platform == "win32":
+            # Windows
+            self.dom_data_dir = os.path.expandvars(r'%APPDATA%\\Dominions5\\')
+            self.dom_exe = "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dominions5\\Dominions5.exe\""
 
 
 def load_mail():

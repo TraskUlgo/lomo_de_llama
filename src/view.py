@@ -29,7 +29,7 @@ class ManagerFrame(tk.Frame):
         self.activeTurnMenu.pack()
 
         self.getTurnsButton = tk.Button(self, command=self.get_turns, text="Get turns")
-        self.joinGameButton = tk.Button(self, command=self.join_new, text="Join new game")
+        self.joinGameButton = tk.Button(self, command=JoinWindow(), text="Join new game")
         self.openGameButton = tk.Button(self, command=self.open_game, text="Open game")
 
         self.getTurnsButton.pack()
@@ -49,9 +49,6 @@ class ManagerFrame(tk.Frame):
     def get_turns(self):
         mc.read_mail()
         self.fill_active_games()
-
-    def join_new(self):
-        self.joinWindow = JoinWindow()
 
     def get_available_turns(self):
 
@@ -108,6 +105,7 @@ class PretenderFrame(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
 
+        self.pretenderFiles = []
         self.availablePretenders = tk.Listbox(self)
         self.availablePretenders.pack()
 
@@ -116,7 +114,6 @@ class PretenderFrame(tk.Frame):
         self.pack()
 
     def fill_available_pretenders(self):
-        self.pretenderFiles = []
         for pretenderFileName in gfc.list_pretender_files():
             self.pretenderFiles.append(gfc.PretenderFile())
             pretender = self.pretenderFiles[-1]
@@ -157,7 +154,7 @@ class JoinWindow(tk.Toplevel):
         pretender = self.pFrame.get_selected_pretender()
 
         if len(g_name) > 0 and pretender is not None:
-            mc.upload_pretender(g_name, pretender.get_file_name())
+            mc.upload_pretender(g_name, pretender)
             self.destroy()
         else:
             tk.messagebox.showwarning(title="Problem", message="Name or pretender selection invalid please reselect")
@@ -201,10 +198,7 @@ class EmailWindow(tk.Toplevel):
 
                 mail.select('inbox')
 
-                FROM_EMAIL = email
-                FROM_PWD = passwd
-
-                json_data = {"email": FROM_EMAIL, "passwd": FROM_PWD}
+                json_data = {"email": email, "passwd": passwd}
                 with open(mc.EMAIL_FILE, 'w') as jsonFile:
                     json.dump(json_data, jsonFile)
 
@@ -219,6 +213,13 @@ class EmailWindow(tk.Toplevel):
 def ask_for_upload():
     msg_answer = tk.messagebox.askyesno(title="Upload turn file", message="Do you want to upload the turn file now?")
     return msg_answer
+
+def initial_setup():
+    if not os.path.isfile(mc.EMAIL_FILE):
+        EmailWindow()
+
+    if not os.path.isfile(gfc.LAST_TURN_FILE):
+        EmailWindow()
 
 
 def run():

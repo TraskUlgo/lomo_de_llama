@@ -6,14 +6,17 @@
 import csv
 import json
 import os
+from pathlib import Path
+from sys import platform
 
 DOM_DATA_DIRECTORY = ""
 DOM_EXE = ""
+
 DOM_SAVE_GAME_SUBDIR = "savedgames"
 DOM_NEWLORDS_SUBDIR = "newlords"
 TURN_EXT = ".trn"
 H_EXT = ".2h"
-LAST_TURN_FILE = "lastturns.json"
+LAST_TURN_FILE = "../data/lastturns.json"
 BACKUP_TURNS = True
 CURRENT_TURN = "current"
 
@@ -159,3 +162,5 @@ def start_dominions(game_name):
 def get_save_game_path(game_name):
     game_dir = os.path.join(DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, game_name)
     return game_dir
+
+
