@@ -6,9 +6,8 @@ import smtplib
 from email.message import EmailMessage
 from tkinter import messagebox
 import View
+import GameFileController as gfc
 
-from src.GameFileController import load_last_turn_file, get_or_create_save_game_path, start_dominions, \
-    save_last_turn_file, get_save_game_file_name, get_save_game_file_path, BACKUP_TURNS
 
 EMAIL_FILE = "email.json"
 FROM_EMAIL = ""
@@ -64,7 +63,7 @@ def extract_from_subject(subjectText):
 
 
 def read_mail():
-    lastTurns = load_last_turn_file()
+    lastTurns = gfc.load_last_turn_file()
 
     mail = imaplib.IMAP4_SSL(SMTP_SERVER)
     mail.login(FROM_EMAIL, FROM_PWD)
@@ -111,14 +110,14 @@ def read_mail():
                         continue
 
                     filename = part.get_filename()
-                    attPath = os.path.join(get_or_create_save_game_path(gameName), filename)
+                    attPath = os.path.join(gfc.get_or_create_save_game_path(gameName), filename)
 
                     fp = open(attPath, 'wb')
                     fp.write(part.get_payload(decode=True))
                     fp.close()
 
-                    if BACKUP_TURNS:
-                        attPath = os.path.join(get_or_create_save_game_path(gameName),
+                    if gfc.BACKUP_TURNS:
+                        attPath = os.path.join(gfc.get_or_create_save_game_path(gameName),
                                                "{}_{}".format(turnNumber, filename))
 
                         fp = open(attPath, 'wb')
@@ -132,14 +131,14 @@ def read_mail():
     if len(newTurnFoundGamenames) > 0:
         for gameName, turnNumber in newTurnFoundGamenames:
             messagebox.showinfo(title="New turn", message="New turn {} received for {}".format(turnNumber, gameName))
-            start_dominions(gameName)
+            gfc.start_dominions(gameName)
             if View.ask_for_upload():
                 upload_turn(gameName, lastTurns[gameName])
     else:
         messagebox.showinfo(title="No new turns", message="No new turn received")
     # print("No new turn received")
 
-    save_last_turn_file(lastTurns)
+    gfc.save_last_turn_file(lastTurns)
 
 
 def upload_turn(gameName, turnNumber):
@@ -149,9 +148,9 @@ def upload_turn(gameName, turnNumber):
         msg['From'] = FROM_EMAIL
         msg['To'] = TURN_EMAIL
 
-        hFileName = get_save_game_file_name(gameName)
+        hFileName = gfc.get_save_game_file_name(gameName)
 
-        hFilePath = get_save_game_file_path(gameName)
+        hFilePath = gfc.get_save_game_file_path(gameName)
 
         with open(hFilePath, 'rb') as fp:
             hData = fp.read()
@@ -164,8 +163,8 @@ def upload_turn(gameName, turnNumber):
 
         mail.quit()
 
-        if BACKUP_TURNS:
-            attPath = os.path.join(get_or_create_save_game_path(gameName), "{}_{}".format(turnNumber, hFileName))
+        if gfc.BACKUP_TURNS:
+            attPath = os.path.join(gfc.get_or_create_save_game_path(gameName), "{}_{}".format(turnNumber, hFileName))
 
             fp = open(attPath, 'wb')
             fp.write(hData)
