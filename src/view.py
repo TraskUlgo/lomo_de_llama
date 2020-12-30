@@ -170,7 +170,7 @@ class EmailWindow(tk.Toplevel):
 
         self.msgLbl = tk.Label(self,
                                text="Please enter your gmail information. You have to allow access for low security "
-                                    "apps in gmail. It is adviced to use a secondary account just for this purpose.")
+                                    "apps in gmail. It is advised to use a secondary account just for this purpose.")
         self.msgLbl.pack()
 
         self.emailLbl = tk.Label(self, text="Email address")

@@ -8,7 +8,6 @@ from tkinter import messagebox
 import view
 import gamefilecontroller as gfc
 
-
 EMAIL_FILE = "email.json"
 FROM_EMAIL = ""
 FROM_PWD = ""
@@ -23,83 +22,83 @@ JOIN_EMAIL = "pretenders" + LLAMA_EMAIL
 def load_mail():
     try:
         with open(EMAIL_FILE, 'r') as jsonFile:
-            jsonData = json.load(jsonFile)
-            FROM_EMAIL = jsonData["email"]
-            FROM_PWD = jsonData["passwd"]
+            json_data = json.load(jsonFile)
+            FROM_EMAIL = json_data["email"]
+            FROM_PWD = json_data["passwd"]
     except IOError:
-        ew = view.EmailWindow()
+        view.EmailWindow()
 
 
-def extract_from_subject(subjectText):
-    if "Reminder: " in subjectText:
-        return (False, "", 0)
+def extract_from_subject(subject_text):
+    if "Reminder: " in subject_text:
+        return False, "", 0
 
-    if ": Pretender received for " in subjectText:
-        messagebox.showinfo(title="Pretender received", message=subjectText)
-        return (False, "", 0)
+    if ": Pretender received for " in subject_text:
+        messagebox.showinfo(title="Pretender received", message=subject_text)
+        return False, "", 0
 
-    if "Problem - " in subjectText:
-        messagebox.showwarning(title="Problem", message=subjectText)
-        return (False, "", 0)
+    if "Problem - " in subject_text:
+        messagebox.showwarning(title="Problem", message=subject_text)
+        return False, "", 0
 
-    if " started! First turn attached" in subjectText:
-        gameName = subjectText.split(' ')[0]
-        return (True, gameName, 1)
+    if " started! First turn attached" in subject_text:
+        game_name = subject_text.split(' ')[0]
+        return True, game_name, 1
 
-    if ": Rolled back to turn " in subjectText:
-        gameName = subjectText.split(':')[0]
-        turnNumber = subjectText.split(' ')[-1]
-    elif " " in subjectText.split(':')[0]:
-        gameName = subjectText.split(':')[1].split()[0].split(',')[0]
-        turnNumber = subjectText.lower().split('turn')[2].split()[0]
+    if ": Rolled back to turn " in subject_text:
+        game_name = subject_text.split(':')[0]
+        turn_number = subject_text.split(' ')[-1]
+    elif " " in subject_text.split(':')[0]:
+        game_name = subject_text.split(':')[1].split()[0].split(',')[0]
+        turn_number = subject_text.lower().split('turn')[2].split()[0]
     else:
-        gameName = subjectText.split(':')[0]
-        if 'started!' in subjectText:
-            turnNumber = '1'
+        game_name = subject_text.split(':')[0]
+        if 'started!' in subject_text:
+            turn_number = '1'
         else:
-            turnNumber = subjectText.lower().split('turn')[1].split()[0]
-    return (True, gameName, turnNumber)
+            turn_number = subject_text.lower().split('turn')[1].split()[0]
+    return True, game_name, turn_number
 
 
 def read_mail():
-    lastTurns = gfc.load_last_turn_file()
+    last_turns = gfc.load_last_turn_file()
 
     mail = imaplib.IMAP4_SSL(SMTP_SERVER)
     mail.login(FROM_EMAIL, FROM_PWD)
 
     mail.select('inbox')
 
-    responseType, returnData = mail.search(None, 'FROM', TURN_EMAIL, '(UNSEEN)')
+    response_type, return_data = mail.search(None, 'FROM', TURN_EMAIL, '(UNSEEN)')
 
-    mailIDs = returnData[0].split()
+    mail_ids = return_data[0].split()
 
     # print(len(mailIDs), "new emails received")
 
-    attPath = None
-    gameName = None
-    newTurnFoundGamenames = []
-    turnNumber = -1
+    att_path = None
+    game_name = None
+    new_turn_found_game_names = []
+    turn_number = -1
 
-    if len(mailIDs) > 0:
-        for mailID in mailIDs:
-            responseType, mailParts = mail.fetch(mailID, FETCH_PROTOCOL)
+    if len(mail_ids) > 0:
+        for mailID in mail_ids:
+            response_type, mail_parts = mail.fetch(mailID, FETCH_PROTOCOL)
 
-            msg = email.message_from_bytes(mailParts[0][1])
+            msg = email.message_from_bytes(mail_parts[0][1])
 
             subject = email.header.decode_header(msg["Subject"])[0][0]
             if isinstance(subject, bytes):
                 subject = subject.decode()
 
-            needTurn, gameName, turnNumber = extract_from_subject(subject)
+            need_turn, game_name, turn_number = extract_from_subject(subject)
 
-            if needTurn:
-                if gameName in lastTurns:  # check if we look at old turnfiles
+            if need_turn:
+                if game_name in last_turns:  # check if we look at old turn files
                     # if int(lastTurns[gameName]) >= int(turnNumber):
-                    #	continue
+                    # continue
                     # else:
-                    lastTurns[gameName] = turnNumber
+                    last_turns[game_name] = turn_number
                 else:  # if int(turnNumber) == 1: # this just started
-                    lastTurns[gameName] = turnNumber
+                    last_turns[game_name] = turn_number
 
                 for part in msg.walk():
                     if part.get_content_maintype() == 'multipart':
@@ -109,51 +108,51 @@ def read_mail():
                         continue
 
                     filename = part.get_filename()
-                    attPath = os.path.join(gfc.get_or_create_save_game_path(gameName), filename)
+                    att_path = os.path.join(gfc.get_or_create_save_game_path(game_name), filename)
 
-                    fp = open(attPath, 'wb')
+                    fp = open(att_path, 'wb')
                     fp.write(part.get_payload(decode=True))
                     fp.close()
 
                     if gfc.BACKUP_TURNS:
-                        attPath = os.path.join(gfc.get_or_create_save_game_path(gameName),
-                                               "{}_{}".format(turnNumber, filename))
+                        att_path = os.path.join(gfc.get_or_create_save_game_path(game_name),
+                                                "{}_{}".format(turn_number, filename))
 
-                        fp = open(attPath, 'wb')
+                        fp = open(att_path, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
 
-                    newTurnFoundGamenames.append((gameName, turnNumber))
+                    new_turn_found_game_names.append((game_name, turn_number))
 
     mail.logout()
 
-    if len(newTurnFoundGamenames) > 0:
-        for gameName, turnNumber in newTurnFoundGamenames:
-            messagebox.showinfo(title="New turn", message="New turn {} received for {}".format(turnNumber, gameName))
-            gfc.start_dominions(gameName)
+    if len(new_turn_found_game_names) > 0:
+        for game_name, turn_number in new_turn_found_game_names:
+            messagebox.showinfo(title="New turn", message="New turn {} received for {}".format(turn_number, game_name))
+            gfc.start_dominions(game_name)
             if view.ask_for_upload():
-                upload_turn(gameName, lastTurns[gameName])
+                upload_turn(game_name, last_turns[game_name])
     else:
         messagebox.showinfo(title="No new turns", message="No new turn received")
     # print("No new turn received")
 
-    gfc.save_last_turn_file(lastTurns)
+    gfc.save_last_turn_file(last_turns)
 
 
-def upload_turn(gameName, turnNumber):
+def upload_turn(game_name, turn_number):
     try:
         msg = EmailMessage()
-        msg['Subject'] = filter_chars(gameName)
+        msg['Subject'] = filter_chars(game_name)
         msg['From'] = FROM_EMAIL
         msg['To'] = TURN_EMAIL
 
-        hFileName = gfc.get_save_game_file_name(gameName)
+        h_file_name = gfc.get_save_game_file_name(game_name)
 
-        hFilePath = gfc.get_save_game_file_path(gameName)
+        h_file_path = gfc.get_save_game_file_path(game_name)
 
-        with open(hFilePath, 'rb') as fp:
-            hData = fp.read()
-        msg.add_attachment(hData, maintype='application', subtype='octet-stream', filename=hFileName)
+        with open(h_file_path, 'rb') as fp:
+            h_data = fp.read()
+        msg.add_attachment(h_data, maintype='application', subtype='octet-stream', filename=h_file_name)
 
         mail = smtplib.SMTP_SSL(SMTP_SERVER)
         mail.login(FROM_EMAIL, FROM_PWD)
@@ -163,10 +162,11 @@ def upload_turn(gameName, turnNumber):
         mail.quit()
 
         if gfc.BACKUP_TURNS:
-            attPath = os.path.join(gfc.get_or_create_save_game_path(gameName), "{}_{}".format(turnNumber, hFileName))
+            att_path = os.path.join(gfc.get_or_create_save_game_path(game_name),
+                                    "{}_{}".format(turn_number, h_file_name))
 
-            fp = open(attPath, 'wb')
-            fp.write(hData)
+            fp = open(att_path, 'wb')
+            fp.write(h_data)
             fp.close()
 
         messagebox.showinfo(title="Turn sent", message="Turn sent")
@@ -174,18 +174,18 @@ def upload_turn(gameName, turnNumber):
         messagebox.showinfo(title="Error", message=str(err))
 
 
-def upload_pretender(gameName, pretenderPath):
+def upload_pretender(game_name, pretender_path):
     try:
         msg = EmailMessage()
-        msg['Subject'] = filter_chars(gameName)
+        msg['Subject'] = filter_chars(game_name)
         msg['From'] = FROM_EMAIL
         msg['To'] = JOIN_EMAIL
 
-        fileName = os.path.basename(pretenderPath)
+        file_name = os.path.basename(pretender_path)
 
-        with open(pretenderPath, 'rb') as fp:
-            pData = fp.read()
-        msg.add_attachment(pData, maintype='application', subtype='octet-stream', filename=fileName)
+        with open(pretender_path, 'rb') as fp:
+            p_data = fp.read()
+        msg.add_attachment(p_data, maintype='application', subtype='octet-stream', filename=file_name)
 
         mail = smtplib.SMTP_SSL(SMTP_SERVER)
         mail.login(FROM_EMAIL, FROM_PWD)
