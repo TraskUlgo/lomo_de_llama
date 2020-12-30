@@ -23,7 +23,6 @@ JOIN_EMAIL = "pretenders" + LLAMA_EMAIL
 
 
 def load_mail():
-    jsonData = {}
     try:
         with open(EMAIL_FILE, 'r') as jsonFile:
             jsonData = json.load(jsonFile)
@@ -134,7 +133,7 @@ def read_mail():
         for gameName, turnNumber in newTurnFoundGamenames:
             messagebox.showinfo(title="New turn", message="New turn {} received for {}".format(turnNumber, gameName))
             start_dominions(gameName)
-            if ask_for_upload():
+            if View.ask_for_upload():
                 upload_turn(gameName, lastTurns[gameName])
     else:
         messagebox.showinfo(title="No new turns", message="No new turn received")
