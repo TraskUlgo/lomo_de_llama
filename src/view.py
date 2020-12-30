@@ -3,8 +3,8 @@ import json
 import os
 import shutil
 import tkinter as tk
-import MailController as mc
-import GameFileController as gfc
+import mailcontroller as mc
+import gamefilecontroller as gfc
 from tkinter import messagebox
 
 

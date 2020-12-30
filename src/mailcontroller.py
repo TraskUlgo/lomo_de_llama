@@ -5,8 +5,8 @@ import os
 import smtplib
 from email.message import EmailMessage
 from tkinter import messagebox
-import View
-import GameFileController as gfc
+import view
+import gamefilecontroller as gfc
 
 
 EMAIL_FILE = "email.json"
@@ -18,7 +18,6 @@ FETCH_PROTOCOL = '(RFC822)'
 LLAMA_EMAIL = "@llamaserver.net"
 TURN_EMAIL = "turns" + LLAMA_EMAIL
 JOIN_EMAIL = "pretenders" + LLAMA_EMAIL
-#from src.View import EmailWindow, ask_for_upload
 
 
 def load_mail():
@@ -28,7 +27,7 @@ def load_mail():
             FROM_EMAIL = jsonData["email"]
             FROM_PWD = jsonData["passwd"]
     except IOError:
-        ew = View.EmailWindow()
+        ew = view.EmailWindow()
 
 
 def extract_from_subject(subjectText):
@@ -132,7 +131,7 @@ def read_mail():
         for gameName, turnNumber in newTurnFoundGamenames:
             messagebox.showinfo(title="New turn", message="New turn {} received for {}".format(turnNumber, gameName))
             gfc.start_dominions(gameName)
-            if View.ask_for_upload():
+            if view.ask_for_upload():
                 upload_turn(gameName, lastTurns[gameName])
     else:
         messagebox.showinfo(title="No new turns", message="No new turn received")

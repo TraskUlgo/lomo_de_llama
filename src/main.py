@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from sys import platform
 import tkinter
-import View
+import view
 
 
 if platform == "linux":
@@ -27,5 +27,5 @@ if __name__ == '__main__':
     window = tkinter.Tk()
     window.title("lomo de llama")
     window.geometry("500x500")
-    View.ManagerFrame(window)
+    view.ManagerFrame(window)
     window.mainloop()
