@@ -74,34 +74,34 @@ class ManagerFrame(tk.Frame):
     def open_game(self):
         if len(self.activeGames.curselection()) > 0:
             if self.activeTurn.get() != gfc.CURRENT_TURN:
-                turnNumber = self.activeTurn.get()
-                selectedGameName = self.activeGames.get(self.activeGames.curselection()[0])
+                turn_number = self.activeTurn.get()
+                selected_game_name = self.activeGames.get(self.activeGames.curselection()[0])
 
-                tempTurnpath = "{}_{}".format(selectedGameName, turnNumber)
-                tempFolderPath = gfc.get_or_create_save_game_path(tempTurnpath)
+                temp_turn_path = "{}_{}".format(selected_game_name, turn_number)
+                temp_folder_path = gfc.get_or_create_save_game_path(temp_turn_path)
 
-                originalFolderPath = gfc.get_or_create_save_game_path(selectedGameName)
+                original_folder_path = gfc.get_or_create_save_game_path(selected_game_name)
 
-                tFile = gfc.get_save_game_turn_file_name(selectedGameName)
-                hFile = gfc.get_save_game_file_name(selectedGameName)
+                t_file = gfc.get_save_game_turn_file_name(selected_game_name)
+                h_file = gfc.get_save_game_file_name(selected_game_name)
 
-                shutil.copy(os.path.join(originalFolderPath, "{}_{}".format(turnNumber, tFile)),
-                            os.path.join(tempFolderPath, tFile))
-                shutil.copy(os.path.join(originalFolderPath, "{}_{}".format(turnNumber, hFile)),
-                            os.path.join(tempFolderPath, hFile))
+                shutil.copy(os.path.join(original_folder_path, "{}_{}".format(turn_number, t_file)),
+                            os.path.join(temp_folder_path, t_file))
+                shutil.copy(os.path.join(original_folder_path, "{}_{}".format(turn_number, h_file)),
+                            os.path.join(temp_folder_path, h_file))
 
-                gfc.start_dominions(tempTurnpath)
+                gfc.start_dominions(temp_turn_path)
 
-                shutil.rmtree(tempFolderPath)
+                shutil.rmtree(temp_folder_path)
             else:
-                selectedGameName = self.activeGames.get(self.activeGames.curselection()[0])
+                selected_game_name = self.activeGames.get(self.activeGames.curselection()[0])
 
-                lastTurns = gfc.load_last_turn_file()
-                lastTurnNumber = int(lastTurns[selectedGameName])
+                last_turns = gfc.load_last_turn_file()
+                last_turn_number = int(last_turns[selected_game_name])
 
-                gfc.start_dominions(selectedGameName)
+                gfc.start_dominions(selected_game_name)
                 if ask_for_upload():
-                    mc.upload_turn(selectedGameName, lastTurnNumber)
+                    mc.upload_turn(selected_game_name, last_turn_number)
 
 
 class PretenderFrame(tk.Frame):
@@ -121,10 +121,11 @@ class PretenderFrame(tk.Frame):
             self.pretenderFiles.append(gfc.PretenderFile())
             pretender = self.pretenderFiles[-1]
             if pretender.open(
-                    os.path.join(gfc.DOM_DATA_DIRECTORY, gfc.DOM_SAVE_GAME_SUBDIR, gfc.DOM_NEWLORDS_SUBDIR, pretenderFileName)):
-                pretenderDescription = "{}, {}, {}".format(pretender.get_era(), pretender.get_nation_name(),
-                                                           pretender.get_name())
-                self.availablePretenders.insert(tk.END, pretenderDescription)
+                    os.path.join(gfc.DOM_DATA_DIRECTORY, gfc.DOM_SAVE_GAME_SUBDIR, gfc.DOM_NEWLORDS_SUBDIR,
+                                 pretenderFileName)):
+                pretender_description = "{}, {}, {}".format(pretender.get_era(), pretender.get_nation_name(),
+                                                            pretender.get_name())
+                self.availablePretenders.insert(tk.END, pretender_description)
 
     def get_selected_pretender(self):
         if len(self.availablePretenders.curselection()) > 0:
@@ -152,11 +153,11 @@ class JoinWindow(tk.Toplevel):
         self.joinGameButton.pack()
 
     def join_new(self):
-        gName = self.gameNameVar.get()
+        g_name = self.gameNameVar.get()
         pretender = self.pFrame.get_selected_pretender()
 
-        if len(gName) > 0 and pretender != None:
-            mc.upload_pretender(gName, pretender.get_file_name())
+        if len(g_name) > 0 and pretender is not None:
+            mc.upload_pretender(g_name, pretender.get_file_name())
             self.destroy()
         else:
             tk.messagebox.showwarning(title="Problem", message="Name or pretender selection invalid please reselect")
@@ -168,7 +169,8 @@ class EmailWindow(tk.Toplevel):
         self.title("Add gmail account")
 
         self.msgLbl = tk.Label(self,
-                               text="Please enter your gmail information. You have to allow access for low security apps in gmail. It is adviced to use a secondary account just for this purpose.")
+                               text="Please enter your gmail information. You have to allow access for low security "
+                                    "apps in gmail. It is adviced to use a secondary account just for this purpose.")
         self.msgLbl.pack()
 
         self.emailLbl = tk.Label(self, text="Email address")
@@ -202,9 +204,9 @@ class EmailWindow(tk.Toplevel):
                 FROM_EMAIL = email
                 FROM_PWD = passwd
 
-                jsonData = {"email": FROM_EMAIL, "passwd": FROM_PWD}
+                json_data = {"email": FROM_EMAIL, "passwd": FROM_PWD}
                 with open(mc.EMAIL_FILE, 'w') as jsonFile:
-                    json.dump(jsonData, jsonFile)
+                    json.dump(json_data, jsonFile)
 
                 self.destroy()
 
@@ -215,8 +217,8 @@ class EmailWindow(tk.Toplevel):
 
 
 def ask_for_upload():
-    msgAnswer = tk.messagebox.askyesno(title="Upload turnfile", message="Do you want to upload the turnfile now?")
-    return msgAnswer
+    msg_answer = tk.messagebox.askyesno(title="Upload turn file", message="Do you want to upload the turn file now?")
+    return msg_answer
 
 
 def run():
