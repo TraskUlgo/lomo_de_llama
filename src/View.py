@@ -3,14 +3,9 @@ import json
 import os
 import shutil
 import tkinter as tk
+import MailController as mc
+import GameFileController as gfc
 from tkinter import messagebox
-
-import src.MailController as mc
-from src.GameFileController import PretenderFile, load_last_turn_file, list_pretender_files, \
-    get_or_create_save_game_path, get_save_game_turn_file_name, get_save_game_file_name, start_dominions, \
-    DOM_SAVE_GAME_SUBDIR, DOM_NEWLORDS_SUBDIR, CURRENT_TURN
-from src.main import DOM_DATA_DIRECTORY
-from src.MailController import EMAIL_FILE, SMTP_SERVER
 
 
 class ManagerFrame(tk.Frame):
@@ -26,7 +21,7 @@ class ManagerFrame(tk.Frame):
 
         self.fill_active_games()
 
-        self.turns = [CURRENT_TURN]
+        self.turns = [gfc.CURRENT_TURN]
         self.activeTurn = tk.StringVar(self)
         self.activeTurn.set(self.turns[0])
 
@@ -47,7 +42,7 @@ class ManagerFrame(tk.Frame):
 
     def fill_active_games(self):
         self.activeGames.delete(0, tk.END)
-        last_turns = load_last_turn_file()
+        last_turns = gfc.load_last_turn_file()
         for gameName in last_turns:
             self.activeGames.insert(tk.END, gameName)
 
@@ -64,11 +59,11 @@ class ManagerFrame(tk.Frame):
         if len(self.activeGames.curselection()) > 0:
             selected_game_name = self.activeGames.get(self.activeGames.curselection()[0])
 
-            last_turns = load_last_turn_file()
+            last_turns = gfc.load_last_turn_file()
 
             for i in range(int(last_turns[selected_game_name])):
                 self.turns.append(i)
-        self.turns.append(CURRENT_TURN)
+        self.turns.append(gfc.CURRENT_TURN)
 
         self.activeTurnMenu['menu'].delete(0, 'end')
         for turn in self.turns:
@@ -78,33 +73,33 @@ class ManagerFrame(tk.Frame):
 
     def open_game(self):
         if len(self.activeGames.curselection()) > 0:
-            if self.activeTurn.get() != CURRENT_TURN:
+            if self.activeTurn.get() != gfc.CURRENT_TURN:
                 turnNumber = self.activeTurn.get()
                 selectedGameName = self.activeGames.get(self.activeGames.curselection()[0])
 
                 tempTurnpath = "{}_{}".format(selectedGameName, turnNumber)
-                tempFolderPath = get_or_create_save_game_path(tempTurnpath)
+                tempFolderPath = gfc.get_or_create_save_game_path(tempTurnpath)
 
-                originalFolderPath = get_or_create_save_game_path(selectedGameName)
+                originalFolderPath = gfc.get_or_create_save_game_path(selectedGameName)
 
-                tFile = get_save_game_turn_file_name(selectedGameName)
-                hFile = get_save_game_file_name(selectedGameName)
+                tFile = gfc.get_save_game_turn_file_name(selectedGameName)
+                hFile = gfc.get_save_game_file_name(selectedGameName)
 
                 shutil.copy(os.path.join(originalFolderPath, "{}_{}".format(turnNumber, tFile)),
                             os.path.join(tempFolderPath, tFile))
                 shutil.copy(os.path.join(originalFolderPath, "{}_{}".format(turnNumber, hFile)),
                             os.path.join(tempFolderPath, hFile))
 
-                start_dominions(tempTurnpath)
+                gfc.start_dominions(tempTurnpath)
 
                 shutil.rmtree(tempFolderPath)
             else:
                 selectedGameName = self.activeGames.get(self.activeGames.curselection()[0])
 
-                lastTurns = load_last_turn_file()
+                lastTurns = gfc.load_last_turn_file()
                 lastTurnNumber = int(lastTurns[selectedGameName])
 
-                start_dominions(selectedGameName)
+                gfc.start_dominions(selectedGameName)
                 if ask_for_upload():
                     mc.upload_turn(selectedGameName, lastTurnNumber)
 
@@ -122,11 +117,11 @@ class PretenderFrame(tk.Frame):
 
     def fill_available_pretenders(self):
         self.pretenderFiles = []
-        for pretenderFileName in list_pretender_files():
-            self.pretenderFiles.append(PretenderFile())
+        for pretenderFileName in gfc.list_pretender_files():
+            self.pretenderFiles.append(gfc.PretenderFile())
             pretender = self.pretenderFiles[-1]
             if pretender.open(
-                    os.path.join(DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, DOM_NEWLORDS_SUBDIR, pretenderFileName)):
+                    os.path.join(gfc.DOM_DATA_DIRECTORY, gfc.DOM_SAVE_GAME_SUBDIR, gfc.DOM_NEWLORDS_SUBDIR, pretenderFileName)):
                 pretenderDescription = "{}, {}, {}".format(pretender.get_era(), pretender.get_nation_name(),
                                                            pretender.get_name())
                 self.availablePretenders.insert(tk.END, pretenderDescription)
@@ -194,14 +189,12 @@ class EmailWindow(tk.Toplevel):
         self.registerMailButton.pack()
 
     def register_mail(self):
-        global FROM_EMAIL
-        global FROM_PWD
         email = self.emailVar.get()
         passwd = self.emailPassVar.get()
 
         if len(email) > 0 and len(passwd) > 0:
             try:
-                mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+                mail = imaplib.IMAP4_SSL(mc.SMTP_SERVER)
                 mail.login(email, passwd)
 
                 mail.select('inbox')
@@ -210,7 +203,7 @@ class EmailWindow(tk.Toplevel):
                 FROM_PWD = passwd
 
                 jsonData = {"email": FROM_EMAIL, "passwd": FROM_PWD}
-                with open(EMAIL_FILE, 'w') as jsonFile:
+                with open(mc.EMAIL_FILE, 'w') as jsonFile:
                     json.dump(jsonData, jsonFile)
 
                 self.destroy()
