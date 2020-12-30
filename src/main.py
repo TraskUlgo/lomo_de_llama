@@ -6,9 +6,9 @@
 import os
 from pathlib import Path
 from sys import platform
-import tkinter as tk
-
+import tkinter
 import View
+
 
 if platform == "linux":
     # linux
@@ -24,7 +24,7 @@ elif platform == "win32":
     DOM_EXE = "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dominions5\\Dominions5.exe\""
 
 if __name__ == '__main__':
-    window = tk.Tk()
+    window = tkinter.Tk()
     window.title("lomo de llama")
     window.geometry("500x500")
     View.ManagerFrame(window)
