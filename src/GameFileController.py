@@ -61,20 +61,27 @@ class PretenderFile():
 
     def get_name(self):
         xorValue = 79  # b'\x4F'
-        terminator = 79  # b'O' #b'\x78'
-        startPos = 132
+        terminator = 79  # b'\x4F'
+        startPos = 0 # relative in name subpart
         pretNameStr = ''
         readPos = 0
+        
+        ignores = [0, 255]
+
+        name_subpart = self.rawData.split(b'\xFF\xFF\xFF\xFF')[4]
 
         lastRead = b'\x00'
         while lastRead != terminator:
-            lastRead = self.rawData[startPos + readPos]
+            lastRead = name_subpart[startPos + readPos]
             readPos = readPos + 1
+            
+            if lastRead in ignores: # we are reading pre name junk, move start pos forward, reset readPos back
+                startPos += 1
+                readPos -= 1
+                
+        for b in bytes(name_subpart[startPos:startPos + readPos - 1]):
+            pretNameStr = pretNameStr + chr(b ^ xorValue)        
 
-        for b in bytes(self.rawData[startPos:startPos + readPos - 1]):
-            pretNameStr = pretNameStr + chr(b ^ xorValue)
-
-        # print(pretNameStr)
         return pretNameStr
 
     def is_dominion_file(self):
@@ -158,3 +165,53 @@ def start_dominions(gameName):
 def get_save_game_path(gameName):
     gameDir = os.path.join(DOM_DATA_DIRECTORY, DOM_SAVE_GAME_SUBDIR, gameName)
     return gameDir
+
+if __name__ == '__main__':
+    import unittest
+    
+    class TestPretenderFileNoPasswordRus(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cls.pretender_file_obj = PretenderFile()
+            cls.pretender_file_obj.open("../test/early_bogarus_0.2h")
+        
+        def test_era(self):
+            self.assertEqual(self.pretender_file_obj.get_era(), "EA")
+            
+        def test_nation(self):
+            self.assertEqual(self.pretender_file_obj.get_nation_name(), "Rus")         
+        
+        def test_name(self):
+            self.assertEqual(self.pretender_file_obj.get_name(), "Gerhart")  
+            
+    class TestPretenderFileNoPasswordUlm(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cls.pretender_file_obj = PretenderFile()
+            cls.pretender_file_obj.open("../test/mid_ulm_1.2h")
+        
+        def test_era(self):
+            self.assertEqual(self.pretender_file_obj.get_era(), "MA")
+            
+        def test_nation(self):
+            self.assertEqual(self.pretender_file_obj.get_nation_name(), "Ulm")         
+        
+        def test_name(self):
+            self.assertEqual(self.pretender_file_obj.get_name(), "Rend")    
+            
+    class TestPretenderFilePasswordJomon(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cls.pretender_file_obj = PretenderFile()
+            cls.pretender_file_obj.open("../test/late_jomon_0.2h")
+        
+        def test_era(self):
+            self.assertEqual(self.pretender_file_obj.get_era(), "LA")
+            
+        def test_nation(self):
+            self.assertEqual(self.pretender_file_obj.get_nation_name(), "Jomon")         
+        
+        def test_name(self):
+            self.assertEqual(self.pretender_file_obj.get_name(), "Seiichi")      
+    
+    unittest.main(verbosity=True)
