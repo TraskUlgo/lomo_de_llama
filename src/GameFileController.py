@@ -6,6 +6,7 @@
 import csv
 import json
 import os
+import struct
 
 DOM_DATA_DIRECTORY = ""
 DOM_EXE = ""
@@ -83,6 +84,16 @@ class PretenderFile():
             pretNameStr = pretNameStr + chr(b ^ xorValue)        
 
         return pretNameStr
+
+    def get_unit_id(self):
+        unit_subpart = self.rawData.split(b'\xFF\xFF\xFF\xFF')[2]
+        unit_id = struct.unpack("<h", unit_subpart[:2])[0]
+        return unit_id
+
+    def get_unit_hp(self):
+        unit_subpart = self.rawData.split(b'\xFF\xFF\xFF\xFF')[2]
+        unit_hp = struct.unpack("<h", unit_subpart[-2:])[0]
+        return unit_hp    
 
     def is_dominion_file(self):
         # print(self.rawData[3:6])
@@ -184,6 +195,12 @@ if __name__ == '__main__':
         def test_name(self):
             self.assertEqual(self.pretender_file_obj.get_name(), "Gerhart")  
             
+        def test_unit_id(self):
+            self.assertEqual(self.pretender_file_obj.get_unit_id(), 1340) # Tiwaz of War
+    
+        def test_unit_hp(self):
+            self.assertEqual(self.pretender_file_obj.get_unit_hp(), 75)        
+            
     class TestPretenderFileNoPasswordUlm(unittest.TestCase):
         @classmethod
         def setUpClass(cls):
@@ -197,7 +214,13 @@ if __name__ == '__main__':
             self.assertEqual(self.pretender_file_obj.get_nation_name(), "Ulm")         
         
         def test_name(self):
-            self.assertEqual(self.pretender_file_obj.get_name(), "Rend")    
+            self.assertEqual(self.pretender_file_obj.get_name(), "Rend")   
+            
+        def test_unit_id(self):
+            self.assertEqual(self.pretender_file_obj.get_unit_id(), 180) # Demilich
+    
+        def test_unit_hp(self):
+            self.assertEqual(self.pretender_file_obj.get_unit_hp(), 3)        
             
     class TestPretenderFilePasswordJomon(unittest.TestCase):
         @classmethod
@@ -212,6 +235,12 @@ if __name__ == '__main__':
             self.assertEqual(self.pretender_file_obj.get_nation_name(), "Jomon")         
         
         def test_name(self):
-            self.assertEqual(self.pretender_file_obj.get_name(), "Seiichi")      
+            self.assertEqual(self.pretender_file_obj.get_name(), "Seiichi")   
+            
+        def test_unit_id(self):
+            self.assertEqual(self.pretender_file_obj.get_unit_id(), 2979) # Onmyo Hakase
+    
+        def test_unit_hp(self):
+            self.assertEqual(self.pretender_file_obj.get_unit_hp(), 10)        
     
     unittest.main(verbosity=True)
